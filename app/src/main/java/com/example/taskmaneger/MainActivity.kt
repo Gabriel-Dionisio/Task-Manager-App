@@ -1,94 +1,100 @@
 package com.example.taskmaneger
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.TextView
-import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmaneger.databinding.ActivityMainBinding
+import com.example.taskmaneger.model.App
+import com.example.taskmaneger.model.Task
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private val listTask = mutableListOf<Task>()
+    private lateinit var adapter: TaskAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val mainItens = mutableListOf<MainItem>()
-        mainItens.add(
-            MainItem(
-                1,
-                "Lavar Roupa",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-                "24/04/2025 - 13:00",
-                false,
-                R.color.green
-            )
-        )
-        mainItens.add(
-            MainItem(
-                1,
-                "Estudar",
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ",
-                "24/04/2025 - 14:00",
-                true,
-                R.color.amarelo
-            )
-        )
-
-
-        val adapter = MainAdapter(mainItens) {it ->
-            Toast.makeText(this, "Teste $it", Toast.LENGTH_SHORT).show()
-        }
-        var rvMain: RecyclerView = binding.rvMain
+        adapter = TaskAdapter(listTask)
+        val rvMain: RecyclerView = binding.rvMain
         rvMain.adapter = adapter
         rvMain.layoutManager = LinearLayoutManager(this)
+
+        binding.createButtun.setOnClickListener {
+            val taskFormIntent = Intent(this, TaskFormActivity::class.java)
+            startActivity(taskFormIntent)
+        }
     }
 
-    private inner class MainAdapter(
-        private val mainItens: List<MainItem>,
-        private val onItemClickListener: (String) -> Unit
+    override fun onResume() {
+        super.onResume()
+        Thread {
+            val app = application as App
+            val dao = app.db.taskDao()
+            val response = dao.getAll()
+
+            runOnUiThread {
+                listTask.clear()
+                listTask.addAll(response)
+                adapter.notifyDataSetChanged()
+                Log.i("TesteDB", "$response")
+            }
+        }.start()
+    }
+
+    private inner class TaskAdapter(
+        private val listTask: List<Task>
     ) :
-        RecyclerView.Adapter<MainAdapter.MainViewHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
+        RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
             val view = layoutInflater.inflate(R.layout.main_item, parent, false)
-            return MainViewHolder(view)
+            return TaskViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
-            val itemCurrent = mainItens[position]
+        override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
+            val itemCurrent = listTask[position]
             holder.bind(itemCurrent)
         }
 
         override fun getItemCount(): Int {
-            return mainItens.size
+            return listTask.size
         }
 
-        private inner class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bind(item: MainItem) {
-                val container: ConstraintLayout = itemView.findViewById(R.id.container)
-                val taskName: TextView = itemView.findViewById(R.id.task_name)
-                val descripition: TextView = itemView.findViewById(R.id.description)
-                val dateHour: TextView = itemView.findViewById(R.id.date_hour)
-                val checkBox: CheckBox = itemView.findViewById(R.id.check_box)
-                val priorityLevel: View = itemView.findViewById(R.id.priority_level)
+        private inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            fun bind(item: Task) {
 
-                taskName.setText(item.taskNameId)
-                descripition.setText(item.descriptionId)
-                dateHour.setText(item.dateHourId)
-                checkBox.isChecked = item.doneId
-                priorityLevel.setBackgroundResource(item.priorityLevel)
+                val taskNameTxt: TextView = itemView.findViewById(R.id.task_name)
+                val descriptionTxt: TextView = itemView.findViewById(R.id.description)
+                val priority: View = itemView.findViewById(R.id.priority_level)
+                val dateTxt: TextView = itemView.findViewById(R.id.date)
 
-                container.setOnClickListener{
-                    onItemClickListener.invoke(item.taskNameId)
-                }
+                taskNameTxt.setText(item.taskName)
+                descriptionTxt.setText(item.description)
+                priority.setBackgroundResource(
+                    when (item.priorityLevel) {
+                        1 -> R.color.green
+                        2 -> R.color.amarelo
+                        3 -> R.color.vermelho
+                        else -> R.color.white
+                    }
+                )
+
+                val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
+                val dateHour = sdf.format(item.dateHour)
+                dateTxt.setText(dateHour)
             }
         }
     }
