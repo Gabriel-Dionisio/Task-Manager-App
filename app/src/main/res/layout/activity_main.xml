@@ -18,18 +18,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Barra de pesquisa -->
-        <EditText
-            android:id="@+id/search_bar"
+        <SearchView
+            android:id="@+id/search_task"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:drawableStart="@drawable/search_icon"
             android:hint="Search"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            android:paddingEnd="16dp"
+            android:maxWidth="1000dp"
+            android:iconifiedByDefault="false"/>
 
-        <!-- Ícone de filtro -->
         <ImageButton
             android:id="@+id/filter"
             android:layout_width="wrap_content"
@@ -107,7 +106,6 @@
                     android:background="?attr/selectableItemBackgroundBorderless"/>
             </LinearLayout>
 
-            <!-- Filtro de Status -->
             <TextView
                 android:id="@+id/filter_status_title"
                 style="@style/TextAppearance.AppCompat.Small"
@@ -202,7 +200,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- RecyclerView para exibir a lista -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_main"
         android:layout_width="match_parent"
@@ -213,7 +210,6 @@
         app:layout_constraintTop_toBottomOf="@id/task_filter_component"
         tools:listitem="@layout/main_item" />
 
-    <!-- FloatingActionButton -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/create_buttun"
         android:layout_width="wrap_content"

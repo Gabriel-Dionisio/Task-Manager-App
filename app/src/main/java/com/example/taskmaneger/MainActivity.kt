@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SearchView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +39,41 @@ class MainActivity : AppCompatActivity() {
             val taskFormIntent = Intent(this, TaskFormActivity::class.java)
             startActivity(taskFormIntent)
         }
+        val seachView = binding.searchTask
+        seachView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(p0: String?): Boolean {
+                Thread {
+                    val app = application as App
+                    val dao = app.db.taskDao()
+                    val allTasks = dao.getAll()
+                    val filteredTask = if (p0.isNullOrEmpty()) {
+                        allTasks.filter { !it.done }
+                    } else {
+                        allTasks.filter { it.taskName.contains(p0, true) }
+                    }
+
+                    runOnUiThread {
+                        listTask.clear()
+                        listTask.addAll(filteredTask)
+                        adapter.notifyDataSetChanged()
+                        binding.filterLabel.setText("Encontrados:")
+                        binding.filterResult.setText(filteredTask.size.toString())
+                    }
+                }.start()
+                return true
+            }
+
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                return false
+            }
+        })
+
+        seachView.setOnCloseListener(object : SearchView.OnCloseListener{
+            override fun onClose(): Boolean {
+                loadTask()
+                return false
+            }
+        })
 
         binding.filter.setOnClickListener {
             if (binding.taskFilterComponent.visibility == View.VISIBLE) {
@@ -93,29 +129,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     override fun onResume() {
         super.onResume()
+        loadTask()
+    }
+
+    fun loadTask() {
         Thread {
             val app = application as App
             val dao = app.db.taskDao()
-            val allTasks = dao.getAll() // Pega todas as tarefas
+            val allTasks = dao.getAll()
 
-            // Filtra apenas as tarefas que não estão feitas (done = false)
             val tasksNotDone = allTasks.filter { !it.done }
 
             runOnUiThread {
-                listTask.clear() // Limpa a lista atual
-                listTask.addAll(tasksNotDone) // Adiciona as tarefas não feitas
-                adapter.notifyDataSetChanged() // Atualiza o RecyclerView
+                listTask.clear()
+                listTask.addAll(tasksNotDone)
+                adapter.notifyDataSetChanged()
                 Log.i("TesteDB", "$tasksNotDone")
             }
         }.start()
     }
 
     private inner class TaskAdapter(
-        private val listTask: List<Task>
+        private var listTask: List<Task>
     ) :
         RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
             val view = layoutInflater.inflate(R.layout.main_item, parent, false)
             return TaskViewHolder(view)
