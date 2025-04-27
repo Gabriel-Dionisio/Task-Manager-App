@@ -15,6 +15,7 @@ import com.example.taskmaneger.model.App
 import com.example.taskmaneger.model.Task
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,6 +38,59 @@ class MainActivity : AppCompatActivity() {
             val taskFormIntent = Intent(this, TaskFormActivity::class.java)
             startActivity(taskFormIntent)
         }
+
+        binding.filter.setOnClickListener {
+            if (binding.taskFilterComponent.visibility == View.VISIBLE) {
+                binding.taskFilterComponent.visibility = View.GONE
+            } else {
+                binding.taskFilterComponent.visibility = View.VISIBLE
+            }
+        }
+
+        binding.chipGroupStatus.setOnCheckedStateChangeListener { group, checkedIds ->
+            Thread {
+                val app = application as App
+                val dao = app.db.taskDao()
+                val allTasks = dao.getAll()
+
+                var filteredTask = when {
+                    checkedIds.contains(R.id.chipPending) -> allTasks.filter { !it.done }
+                    checkedIds.contains(R.id.chipCompleted) -> allTasks.filter { it.done }
+                    else -> allTasks.filter { !it.done }
+                }
+
+                runOnUiThread {
+                    listTask.clear()
+                    listTask.addAll(filteredTask)
+                    adapter.notifyDataSetChanged()
+                    binding.filterLabel.setText("Encontrados:")
+                    binding.filterResult.setText(filteredTask.size.toString())
+                }
+            }.start()
+        }
+
+        binding.chipGroupPriority.setOnCheckedStateChangeListener { group, checkedIds ->
+            thread {
+                val app = application as App
+                val dao = app.db.taskDao()
+                val allTasks = dao.getAll()
+
+                var filteredTask = when {
+                    checkedIds.contains(R.id.chipLow) -> allTasks.filter { it.priorityLevel == 1 }
+                    checkedIds.contains(R.id.chipMedium) -> allTasks.filter { it.priorityLevel == 2 }
+                    checkedIds.contains(R.id.chipHigh) -> allTasks.filter { it.priorityLevel == 3 }
+                    else -> allTasks.filter { !it.done }
+                }
+
+                runOnUiThread {
+                    listTask.clear()
+                    listTask.addAll(filteredTask)
+                    adapter.notifyDataSetChanged()
+                    binding.filterLabel.setText("Encontrados:")
+                    binding.filterResult.setText(filteredTask.size.toString())
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -44,13 +98,16 @@ class MainActivity : AppCompatActivity() {
         Thread {
             val app = application as App
             val dao = app.db.taskDao()
-            val response = dao.getAll()
+            val allTasks = dao.getAll() // Pega todas as tarefas
+
+            // Filtra apenas as tarefas que não estão feitas (done = false)
+            val tasksNotDone = allTasks.filter { !it.done }
 
             runOnUiThread {
-                listTask.clear()
-                listTask.addAll(response)
-                adapter.notifyDataSetChanged()
-                Log.i("TesteDB", "$response")
+                listTask.clear() // Limpa a lista atual
+                listTask.addAll(tasksNotDone) // Adiciona as tarefas não feitas
+                adapter.notifyDataSetChanged() // Atualiza o RecyclerView
+                Log.i("TesteDB", "$tasksNotDone")
             }
         }.start()
     }
