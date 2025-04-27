@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -16,13 +17,20 @@ import com.example.taskmaneger.model.App
 import com.example.taskmaneger.model.Task
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlin.concurrent.thread
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val listTask = mutableListOf<Task>()
     private lateinit var adapter: TaskAdapter
+    private val executor = Executors.newSingleThreadExecutor()
+
+    private var currentFilter: FilterType = FilterType.PENDING
+
+    enum class FilterType {
+        ALL, PENDING, COMPLETED
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         val seachView = binding.searchTask
         seachView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(p0: String?): Boolean {
-                Thread {
+                executor.execute {
                     val app = application as App
                     val dao = app.db.taskDao()
                     val allTasks = dao.getAll()
@@ -59,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                         binding.filterLabel.setText("Encontrados:")
                         binding.filterResult.setText(filteredTask.size.toString())
                     }
-                }.start()
+                }
                 return true
             }
 
@@ -68,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        seachView.setOnCloseListener(object : SearchView.OnCloseListener{
+        seachView.setOnCloseListener(object : SearchView.OnCloseListener {
             override fun onClose(): Boolean {
                 loadTask()
                 return false
@@ -84,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.chipGroupStatus.setOnCheckedStateChangeListener { group, checkedIds ->
-            Thread {
+            executor.execute {
                 val app = application as App
                 val dao = app.db.taskDao()
                 val allTasks = dao.getAll()
@@ -92,6 +100,7 @@ class MainActivity : AppCompatActivity() {
                 var filteredTask = when {
                     checkedIds.contains(R.id.chipPending) -> allTasks.filter { !it.done }
                     checkedIds.contains(R.id.chipCompleted) -> allTasks.filter { it.done }
+                    checkedIds.contains(R.id.chipAll) -> allTasks
                     else -> allTasks.filter { !it.done }
                 }
 
@@ -102,11 +111,11 @@ class MainActivity : AppCompatActivity() {
                     binding.filterLabel.setText("Encontrados:")
                     binding.filterResult.setText(filteredTask.size.toString())
                 }
-            }.start()
+            }
         }
 
         binding.chipGroupPriority.setOnCheckedStateChangeListener { group, checkedIds ->
-            thread {
+            executor.execute {
                 val app = application as App
                 val dao = app.db.taskDao()
                 val allTasks = dao.getAll()
@@ -135,8 +144,13 @@ class MainActivity : AppCompatActivity() {
         loadTask()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        executor.shutdown()
+    }
+
     fun loadTask() {
-        Thread {
+        executor.execute {
             val app = application as App
             val dao = app.db.taskDao()
             val allTasks = dao.getAll()
@@ -149,11 +163,11 @@ class MainActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged()
                 Log.i("TesteDB", "$tasksNotDone")
             }
-        }.start()
+        }
     }
 
     private inner class TaskAdapter(
-        private var listTask: List<Task>
+        private var listTask: MutableList<Task>
     ) :
         RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
@@ -178,6 +192,7 @@ class MainActivity : AppCompatActivity() {
                 val descriptionTxt: TextView = itemView.findViewById(R.id.description)
                 val priority: View = itemView.findViewById(R.id.priority_level)
                 val dateTxt: TextView = itemView.findViewById(R.id.date)
+                val checkBox: CheckBox = itemView.findViewById(R.id.check_box)
 
                 taskNameTxt.setText(item.taskName)
                 descriptionTxt.setText(item.description)
@@ -193,6 +208,41 @@ class MainActivity : AppCompatActivity() {
                 val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
                 val dateHour = sdf.format(item.dateHour)
                 dateTxt.setText(dateHour)
+
+                checkBox.setOnCheckedChangeListener(null)
+                checkBox.isChecked = item.done
+
+                checkBox.setOnCheckedChangeListener { _, isChecked ->
+                    executor.execute {
+                        val app = application as App
+                        val dao = app.db.taskDao()
+
+                        dao.updateTaskDoneStatus(item.id, isChecked)
+
+                        runOnUiThread {
+                            val position = adapterPosition
+                            if (position != RecyclerView.NO_POSITION) {
+                                // Cria uma cópia do item atualizado
+                                val updatedItem = item.copy(done = isChecked)
+
+                                listTask[position] = updatedItem
+
+                                val shouldRemove = when (currentFilter) {
+                                    FilterType.PENDING -> isChecked
+                                    FilterType.COMPLETED -> !isChecked
+                                    FilterType.ALL -> false
+                                }
+
+                                if (shouldRemove) {
+                                    listTask.removeAt(position)
+                                    notifyItemRemoved(position)
+                                } else {
+                                    notifyItemChanged(position)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
