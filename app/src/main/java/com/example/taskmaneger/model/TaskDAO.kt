@@ -6,6 +6,7 @@ import androidx.room.Query
 
 @Dao
 interface TaskDAO {
+
     @Insert
     fun insert(task: Task)
 
