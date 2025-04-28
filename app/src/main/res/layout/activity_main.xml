@@ -5,7 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> 46c7019e5ebeecaf7bb19e0241cc4bd70469f15e
     <com.google.android.material.appbar.AppBarLayout
         android:paddingStart="7.5dp"
         android:paddingEnd="7.5dp"
