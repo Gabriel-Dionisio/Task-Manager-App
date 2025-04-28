@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation("com.google.android.material:material:1.6.0")
 
     val room_version = "2.7.1"
     implementation("androidx.room:room-runtime:$room_version")
