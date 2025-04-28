@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="green">#4CAF50</color>
-    <color name="amarelo">#FFEB3B</color>
-    <color name="vermelho">#F44336</color>
+    <color name="white">#FFFFFF</color>
+    <color name="light_gray">#DDDDDD</color>
+    <color name="background_gray">#F7F7F7</color>
+    <color name="black">#000</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+
+    <color name="priority_high">#F44336</color>
+    <color name="priority_medium">#FFEB3B</color>
+    <color name="priority_low">#4CAF50</color>
+
+    <color name="color_button">#2196F3</color>
+    <color name="primary_text_color">#333333</color>
+    <color name="secondary_text_color">#666666</color>
+    <color name="textview_background_color">#F5F5F5</color>
+    <color name="textview_border_color">#CCCCCC</color>
+    <color name="description_background_color">#FFFFFF</color>
+    <color name="description_border_color">#E0E0E0</color>
+    <color name="date_text_color">#999999</color>
+
 </resources>
