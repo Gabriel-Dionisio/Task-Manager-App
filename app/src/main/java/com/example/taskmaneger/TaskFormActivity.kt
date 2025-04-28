@@ -30,11 +30,9 @@ class TaskFormActivity : AppCompatActivity() {
                 val dateFormat = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-                // Converte texto para Date
                 val dateOnly = dateFormat.parse(binding.editTextDate.text.toString())!!
                 val timeOnly = timeFormat.parse(binding.editTextTime.text.toString())!!
 
-                // Junta data e hora num único Date
                 val calendarDate = Calendar.getInstance()
                 calendarDate.time = dateOnly
 
@@ -57,7 +55,6 @@ class TaskFormActivity : AppCompatActivity() {
                 val app = application as App
                 val dao = app.db.taskDao()
 
-                // Inserindo no banco de dados na thread de background
                 dao.insert(
                     Task(
                         taskName = taskName,
@@ -68,7 +65,6 @@ class TaskFormActivity : AppCompatActivity() {
                     )
                 )
 
-                // Atualizando a UI na thread principal
                 runOnUiThread {
                     Toast.makeText(
                         this@TaskFormActivity,
@@ -76,7 +72,7 @@ class TaskFormActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-            }.start()  // Inicia a thread
+            }.start()
         }
     }
 }
