@@ -2,209 +2,61 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:id="@+id/header"
+    <!-- AppBarLayout que vai servir de Header -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:paddingStart="7.5dp"
+        android:paddingEnd="7.5dp"
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <SearchView
-            android:id="@+id/search_task"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Search"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:maxWidth="1000dp"
-            android:iconifiedByDefault="false"/>
-
-        <ImageButton
-            android:id="@+id/filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="10dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Filter"
-            android:src="@drawable/filter_icon" />
-    </LinearLayout>
-
-    <ScrollView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/task_filter_component"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:visibility="gone">
-
-        <LinearLayout
-            android:id="@+id/inner_filter_componet"
+        <FrameLayout
+            android:id="@+id/toolbar_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_weight="1">
 
-            <LinearLayout
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="start|center_vertical">
+                app:popupTheme="@style/Base_ToolbarStyle"/>
 
-                <TextView
-                    android:id="@+id/filter_label"
-                    style="@style/TextAppearance.AppCompat.Large"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    tools:text="Select Filters"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/filter_result"
-                    style="@style/TextAppearance.AppCompat.Large"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:text="1"
-                    android:textStyle="bold"
-                    android:layout_marginStart="8dp" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"/>
-
-                <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/filter_off_icon"
-                    android:contentDescription="Filter"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
-
-                <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/close_icon"
-                    android:contentDescription="Clear Filters"
-                    android:layout_marginEnd="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/filter_status_title"
-                style="@style/TextAppearance.AppCompat.Small"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Status"
-                android:layout_marginStart="16dp" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupStatus"
+            <com.ferfalk.simplesearchview.SimpleSearchView
+                android:id="@+id/searchView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:chipSpacing="8dp"
-                app:singleSelection="false"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:gravity="center">
+                android:layout_height="match_parent"
+                android:theme="@style/Search_View_Theme" />
+        </FrameLayout>
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipPending"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pendentes"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+            app:tabGravity="fill"
+            app:tabIndicatorHeight="4dp"
+            app:tabMode="fixed" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipCompleted"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Concluídas"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
+    </com.google.android.material.appbar.AppBarLayout>
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipAll"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Todos"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
-
-            </com.google.android.material.chip.ChipGroup>
-
-            <TextView
-                android:id="@+id/filter_priority_title"
-                style="@style/TextAppearance.AppCompat.Small"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Prioridade"
-                android:layout_marginStart="16dp" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupPriority"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:chipSpacing="8dp"
-                app:singleSelection="false"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:gravity="start">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipLow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Baixa"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Média"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipHigh"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Alta"
-                    app:chipIcon="@drawable/check_circle_icon"
-                    app:chipIconTint="@android:color/white"
-                    app:closeIconEnabled="false"
-                    android:checkable="true"/>
-
-            </com.google.android.material.chip.ChipGroup>
-
-        </LinearLayout>
-    </ScrollView>
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_main"
@@ -213,17 +65,19 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/task_filter_component"
-        tools:listitem="@layout/main_item" />
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+        android:visibility="invisible"/>
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/create_buttun"
+        android:id="@+id/create_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
-        android:layout_marginBottom="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/color_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,7 @@
 import android.content.Context
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmaneger.listener.OnItemClickListener
 
@@ -12,27 +13,42 @@ class RecyclerItemClickListener(
 
     private val mGestureDetector: GestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapUp(e: MotionEvent): Boolean {
-            val child = recyclerView.findChildViewUnder(e.x, e.y)
-            child?.let {
-                mListener?.onItemClick(it, recyclerView.getChildAdapterPosition(it))
+            return try {
+                val child = recyclerView.findChildViewUnder(e.x, e.y)
+                child?.let {
+                    mListener?.onItemClick(it, recyclerView.getChildAdapterPosition(it))
+                }
+                true
+            } catch (ex: Exception) {
+                Log.e("RecyclerItemClickListener", "Erro ao processar o clique: ${ex.message}")
+                false
             }
-            return false
         }
 
         override fun onLongPress(e: MotionEvent) {
-            val child = recyclerView.findChildViewUnder(e.x, e.y)
-            child?.let {
-                mListener?.onLongItemClick(it, recyclerView.getChildAdapterPosition(it))
+            try {
+                val child = recyclerView.findChildViewUnder(e.x, e.y)
+                child?.let {
+                    mListener?.onLongItemClick(it, recyclerView.getChildAdapterPosition(it))
+                }
+            } catch (ex: Exception) {
+                Log.e("RecyclerItemClickListener", "Erro ao processar o longo clique: ${ex.message}")
             }
         }
     })
 
     override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-        val childView = rv.findChildViewUnder(e.x, e.y)
-        if (childView != null && mListener != null && mGestureDetector.onTouchEvent(e)) {
-            return true
+        return try {
+            val childView = rv.findChildViewUnder(e.x, e.y)
+            if (childView != null && mListener != null && mGestureDetector.onTouchEvent(e)) {
+                true
+            } else {
+                false
+            }
+        } catch (ex: Exception) {
+            Log.e("RecyclerItemClickListener", "Erro ao interceptar evento de toque: ${ex.message}")
+            false
         }
-        return false
     }
 
     override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {}

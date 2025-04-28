@@ -1,0 +1,54 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvFilterTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filtrar por Prioridade"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="12dp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupPriority"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true"
+        android:layout_gravity="center">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipPriorityHigh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alta" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipPriorityMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Média" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipPriorityLow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Baixa" />
+
+    </com.google.android.material.chip.ChipGroup>
+
+    <Button
+        android:id="@+id/btnClearFilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Limpar Filtros"
+        android:backgroundTint="@color/color_button"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
