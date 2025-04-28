@@ -1,21 +1,31 @@
 package com.example.taskmaneger
 
+import RecyclerItemClickListener
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.RadioGroup
 import android.widget.SearchView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmaneger.databinding.ActivityMainBinding
+import com.example.taskmaneger.listener.OnItemClickListener
 import com.example.taskmaneger.model.App
 import com.example.taskmaneger.model.Task
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -43,9 +53,21 @@ class MainActivity : AppCompatActivity() {
         rvMain.adapter = adapter
         rvMain.layoutManager = LinearLayoutManager(this)
 
+        val recyclerItemClickListener = RecyclerItemClickListener(this, rvMain, object :
+            OnItemClickListener {
+            override fun onItemClick(view: View, position: Int) {
+            }
+
+            override fun onLongItemClick(view: View, position: Int) {
+                val task = listTask[position]
+                showEditTaskDialog(task)
+            }
+        })
+
+        rvMain.addOnItemTouchListener(recyclerItemClickListener)
+
         binding.createButtun.setOnClickListener {
-            val taskFormIntent = Intent(this, TaskFormActivity::class.java)
-            startActivity(taskFormIntent)
+            showEditTaskDialog()
         }
         val seachView = binding.searchTask
         seachView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -97,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 val dao = app.db.taskDao()
                 val allTasks = dao.getAll()
 
-                var filteredTask = when {
+                val filteredTask = when {
                     checkedIds.contains(R.id.chipPending) -> allTasks.filter { !it.done }
                     checkedIds.contains(R.id.chipCompleted) -> allTasks.filter { it.done }
                     checkedIds.contains(R.id.chipAll) -> allTasks
@@ -120,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                 val dao = app.db.taskDao()
                 val allTasks = dao.getAll()
 
-                var filteredTask = when {
+                val filteredTask = when {
                     checkedIds.contains(R.id.chipLow) -> allTasks.filter { it.priorityLevel == 1 }
                     checkedIds.contains(R.id.chipMedium) -> allTasks.filter { it.priorityLevel == 2 }
                     checkedIds.contains(R.id.chipHigh) -> allTasks.filter { it.priorityLevel == 3 }
@@ -138,6 +160,117 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showEditTaskDialog(task: Task? = null) {
+        val dialog = Dialog(this@MainActivity)
+        val view = layoutInflater.inflate(R.layout.task_dialog, null)
+        val editTxtTaskName: EditText = view.findViewById(R.id.edit_task_name)
+        val editTxtDescripition: EditText = view.findViewById(R.id.edit_text_descripition)
+        val editTxtDate: EditText = view.findViewById(R.id.edit_text_date)
+        val editTxtTime: EditText = view.findViewById(R.id.edit_text_time)
+        val radioGroup: RadioGroup = view.findViewById(R.id.radio_group_dialog)
+        val cancelBtn: Button = view.findViewById(R.id.cancel_button)
+        val saveBtn: Button = view.findViewById(R.id.save_button)
+
+        if (task != null) {
+            editTxtTaskName.setText(task.taskName)
+            editTxtDescripition.setText(task.description)
+
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val timeSdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val calendar = Calendar.getInstance()
+            calendar.time = task.dateHour
+            editTxtDate.setText(sdf.format(calendar.time))
+            editTxtTime.setText(timeSdf.format(calendar.time))
+
+            when (task.priorityLevel) {
+                1 -> radioGroup.check(R.id.radio_btn_low)
+                2 -> radioGroup.check(R.id.radio_btn_medium)
+                3 -> radioGroup.check(R.id.radio_btn_high)
+            }
+        }
+
+        cancelBtn.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        saveBtn.setOnClickListener {
+            Thread {
+                val taskName = editTxtTaskName.text.toString()
+                val description = editTxtDescripition.text.toString()
+
+                val dateFormat = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
+                val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+                val dateOnly = dateFormat.parse(editTxtDate.text.toString().replace("/", ""))!!
+                val timeOnly = timeFormat.parse(editTxtTime.text.toString())!!
+
+                val calendarDate = Calendar.getInstance()
+                calendarDate.time = dateOnly
+
+                val calendarTime = Calendar.getInstance()
+                calendarTime.time = timeOnly
+
+                calendarDate.set(Calendar.HOUR_OF_DAY, calendarTime.get(Calendar.HOUR_OF_DAY))
+                calendarDate.set(Calendar.MINUTE, calendarTime.get(Calendar.MINUTE))
+
+                val finalDateTime = calendarDate.time
+
+                val selectedId = radioGroup.checkedRadioButtonId
+                val priorityLevel = when (selectedId) {
+                    R.id.radio_btn_low -> 1
+                    R.id.radio_btn_medium -> 2
+                    R.id.radio_btn_high -> 3
+                    else -> 1
+                }
+
+                val app = application as App
+                val dao = app.db.taskDao()
+
+                if (task == null) {
+                    dao.insert(
+                        Task(
+                            taskName = taskName,
+                            description = description,
+                            dateHour = finalDateTime,
+                            done = false,
+                            priorityLevel = priorityLevel
+                        )
+                    )
+                } else {
+                    dao.updateTask(
+                        id = task.id,
+                        taskName = taskName,
+                        description = description,
+                        dateHour = finalDateTime,
+                        done = false,
+                        priorityLevel = priorityLevel
+                    )
+                }
+
+                runOnUiThread {
+                    if (task == null) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Tarefa salva com sucesso!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Tarefa atualizada com sucesso!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    loadTask()
+                    dialog.dismiss()
+                }
+            }.start()
+        }
+
+        dialog.setContentView(view)
+        dialog.show()
+    }
 
     override fun onResume() {
         super.onResume()
@@ -168,8 +301,7 @@ class MainActivity : AppCompatActivity() {
 
     private inner class TaskAdapter(
         private var listTask: MutableList<Task>
-    ) :
-        RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+    ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
             val view = layoutInflater.inflate(R.layout.main_item, parent, false)
@@ -187,7 +319,6 @@ class MainActivity : AppCompatActivity() {
 
         private inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             fun bind(item: Task) {
-
                 val taskNameTxt: TextView = itemView.findViewById(R.id.task_name)
                 val descriptionTxt: TextView = itemView.findViewById(R.id.description)
                 val priority: View = itemView.findViewById(R.id.priority_level)
@@ -222,7 +353,6 @@ class MainActivity : AppCompatActivity() {
                         runOnUiThread {
                             val position = adapterPosition
                             if (position != RecyclerView.NO_POSITION) {
-                                // Cria uma cópia do item atualizado
                                 val updatedItem = item.copy(done = isChecked)
 
                                 listTask[position] = updatedItem
